@@ -1,29 +1,53 @@
+import requests
 import speech_recognition as sr
 import pyttsx3
 import os
 from dotenv import load_dotenv
 import openai
-from pymongo import MongoClient
+import json
+import datetime
 
-load_dotenv()
-OPENAI_KEY = os.getenv('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')
+# Connect to MongoDB
 
-openai.api_key = OPENAI_KEY
+uri = "https://ap-south-1.aws.data.mongodb-api.com/app/data-abcxa/endpoint/data/v1/action/insertOne"
 
-uri = "mongodb+srv://bbot-db:EVTEI4amitan@cluster0.bfoknxi.mongodb.net/?retryWrites=true&w=majority"
-client = MongoClient(uri)
-try:
-    client.admin.command('ping')
-    print("Pinged your deployment. You successfully connected to MongoDB!")
-except Exception as e:
-    print(e)
+
+def upload_to_db(id_date, key, value):
+    payload = json.dumps({
+        "collection": "BBOT",
+        "database": "Techboys",
+        "dataSource": "Cluster0",
+        "document": {
+            "_id": id_date,
+            "key": key,
+            "value": value
+        }
+    })
+
+    headers = {
+        'Content-Type': 'application/json',
+        'Access-Control-Request-Headers': '*',
+        'api-key': 'sC6c0nsPlmQuKYQOMrFmm2YCF52kFIUVKTC0J3Hzim6dXGeREuX9Kb0a6MectYed',
+    }
+
+    requests.request("POST", uri, headers=headers, data=payload)
 
 
 def SpeakText(command):
     # Initialize the engine
     engine = pyttsx3.init()
-    engine.say(command)
+    voices = engine.getProperty('voices')
+    for voice in voices:
+        engine.setProperty('voice', voice.id)
+        engine.say(command)
+        print(voice)
     engine.runAndWait()
+
+# Connect to OpenAI
+load_dotenv()
+OPENAI_KEY = os.getenv('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')
+
+openai.api_key = OPENAI_KEY
 
 
 # Initialize the recognizer
@@ -54,6 +78,7 @@ def record_text():
 
 def getResponse(messages, model="gpt-3.5-turbo"):
     response = openai.ChatCompletion.create(
+        api_key="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",
         model=model,
         messages=messages,
         max_tokens=100,
@@ -63,7 +88,7 @@ def getResponse(messages, model="gpt-3.5-turbo"):
     )
 
     message = response.choices[0].message.content
-    message.append(response.choices[0].message)
+    message += str(response.choices[0].message)
     return message
 
 
@@ -73,6 +98,9 @@ while (1):
     text = record_text()
     messages.append({"role": "user", "content": text})
     response = getResponse(messages)
+    upload_to_db(str(datetime.datetime.now()).strip(), "User", messages[-1])
+    upload_to_db(str(datetime.datetime.now()).strip(), "BBOT", response)
+
     SpeakText(response)
 
     print(response)
