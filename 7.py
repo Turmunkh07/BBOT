@@ -1,17 +1,10 @@
 import cv2
 from deepface import DeepFace
 
-# Load pre-trained emotion detection model
-model = DeepFace.build_model("Emotion")
-
-# Load Haar cascade classifier for face detection
-face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-
-# Map emotion index to human-readable labels
-emotion_labels = {0: 'Angry', 1: 'Disgust', 2: 'Fear', 3: 'Happy', 4: 'Sad', 5: 'Surprise', 6: 'Neutral'}
-
-# Function to detect faces and their emotions in the frame
 def detect_faces_and_emotions(frame):
+    model = DeepFace.build_model("Emotion")
+    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+    emotion_labels = {0: 'Angry', 1: 'Disgust', 2: 'Fear', 3: 'Happy', 4: 'Sad', 5: 'Surprise', 6: 'Neutral'}
     gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = face_cascade.detectMultiScale(gray_frame, scaleFactor=1.3, minNeighbors=5, minSize=(50, 50))
     for (x, y, w, h) in faces:
@@ -28,7 +21,7 @@ def detect_faces_and_emotions(frame):
 
 
 # Main function to capture video from camera and perform emotion detection
-def main():
+def getEmotion():
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         print("Error: Unable to open webcam.")
@@ -40,6 +33,7 @@ def main():
             break
         # Detect faces and emotions in the frame
         frame_with_emotions = detect_faces_and_emotions(frame)
+
         # Display the frame with emotion detection
         cv2.imshow('Real-time Emotion Detection', frame_with_emotions)
         # Break the loop if 'q' is pressed
@@ -49,5 +43,4 @@ def main():
     cap.release()
     cv2.destroyAllWindows()
 
-if __name__ == "__main__":
-    main()
+getEmotion()
