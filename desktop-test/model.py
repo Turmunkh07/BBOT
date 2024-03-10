@@ -32,13 +32,11 @@ def bbot():
 
         requests.request("POST", uri, headers=headers, data=payload)
 
-
     def SpeakText(command):
         # Initialize the engine
         engine = pyttsx3.init()
         engine.say(command)
         engine.runAndWait()
-
 
     def record_text():
         while (1):
@@ -60,7 +58,6 @@ def bbot():
 
             except sr.UnknownValueError:
                 print("I couldn't hear anything")
-
 
     def getResponse(messages, model="gpt-3.5-turbo"):
         response = openai.ChatCompletion.create(
@@ -127,7 +124,6 @@ def bbot():
 
     openai.api_key = OPENAI_KEY
 
-
     # Initialize the recognizer
     r = sr.Recognizer()
 
@@ -139,15 +135,18 @@ def bbot():
     while (1):
         text = record_text()
         getEmotion(3, emotions)
+        for i in range(len(emotions)):
+            if emotions.__contains__("No face detected"):
+                emotions.remove("No face detected")
+            if emotions.__contains__("Unknown"):
+                emotions.remove("Unknown")
+
         if not len(emotions):
             emotions.append("unknown")
-        messages.append({"role": "user", "content": text+"The user is feeling "+emotions[-1]})
+        messages.append({"role": "user", "content": text + "The user is feeling " + emotions[-1]})
         response = getResponse(messages)
         upload_to_db(str(datetime.datetime.now()).strip(), "User", messages[-1])
         upload_to_db(str(datetime.datetime.now()).strip(), "BBOT", response)
 
         SpeakText(response)
 
-        print(response)
-
-bbot()
